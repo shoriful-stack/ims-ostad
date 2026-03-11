@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\CategoryController;
+use App\Http\Controllers\Api\V1\CustomerController;
 use App\Http\Controllers\Api\V1\DashBoardController;
 use App\Http\Controllers\Api\V1\InvoiceController;
 use App\Http\Controllers\Api\V1\ProductController;
@@ -28,6 +29,12 @@ Route::prefix('v1')->group(function () {
         Route::get('/categories/{id}',[CategoryController::class,'show']);
         Route::put('/categories/{id}',[CategoryController::class,'update']);
         Route::delete('/categories/{id}',[CategoryController::class,'destroy']);
+        //Customer Routes
+        Route::get('/customers',[CustomerController::class,'index']);
+        Route::post('/customers',[CustomerController::class,'store']);
+        Route::get('/customers/{id}',[CustomerController::class,'show']);
+        Route::put('/customers/{id}',[CustomerController::class,'update']);
+        Route::delete('/customers/{id}',[CustomerController::class,'destroy']);
 
         //Product Routes
         Route::get('/products',[ProductController::class,'index']);
