@@ -18,7 +18,7 @@ class InvoiceController extends Controller
     public function index()
     {
         try {
-            $invoices = Invoice::with(['items.product.category'])
+            $invoices = Invoice::with(['items.product.category', 'customer'])
                 ->orderByDesc('id')
                 ->get();
 
@@ -41,6 +41,7 @@ class InvoiceController extends Controller
             $validated = $request->validate([
                 'invoice_no' => ['nullable', 'string', 'max:255', 'unique:invoices,invoice_no'],
                 'invoice_date' => ['required', 'date'],
+                'customer_id' => ['required', 'integer', 'exists:customers,id'],
                 'items' => ['required', 'array', 'min:1'],
                 'items.*.product_id' => ['required', 'integer', 'exists:products,id'],
                 'items.*.quantity' => ['required', 'integer', 'min:1'],
@@ -66,6 +67,7 @@ class InvoiceController extends Controller
             $invoice = Invoice::create([
                 'invoice_no' => $validated['invoice_no'],
                 'invoice_date' => $validated['invoice_date'],
+                'customer_id' => $validated['customer_id'],
                 'subtotal' => $validated['subtotal'],
                 'discount_type' => $validated['discount_type'] ?? null,
                 'discount_value' => $validated['discount_value'],
@@ -96,7 +98,7 @@ class InvoiceController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Invoice created successfully',
-                'data' => $invoice->load(['items.product.category']),
+                'data' => $invoice->load(['items.product.category', 'customer']),
             ], 201);
         }catch (ValidationException $e){
             DB::rollBack();
@@ -118,7 +120,7 @@ class InvoiceController extends Controller
     public function show(int $id)
     {
         try {
-            $invoice = Invoice::with(['items.product.category'])->find($id);
+            $invoice = Invoice::with(['items.product.category', 'customer'])->find($id);
             if (!$invoice) {
                 return response()->json([
                     'success' => false,
@@ -161,6 +163,7 @@ class InvoiceController extends Controller
             $validated = $request->validate([
                 'invoice_no' => ['sometimes', 'required', 'string', 'max:255', 'unique:invoices,invoice_no,' . $invoice->id],
                 'invoice_date' => ['sometimes', 'required', 'date'],
+                'customer_id' => ['sometimes', 'required', 'integer', 'exists:customers,id'],
                 'items' => ['sometimes', 'required', 'array', 'min:1'],
                 'items.*.product_id' => ['required', 'integer', 'exists:products,id'],
                 'items.*.quantity' => ['required', 'integer', 'min:1'],
@@ -203,6 +206,7 @@ class InvoiceController extends Controller
             $updateData = [
                 'invoice_no' => $validated['invoice_no'] ?? $invoice->invoice_no,
                 'invoice_date' => $validated['invoice_date'] ?? $invoice->invoice_date,
+                'customer_id' => $validated['customer_id'] ?? $invoice->customer_id,
                 'discount_type' => $validated['discount_type'] ?? $invoice->discount_type,
                 'discount_value' => $validated['discount_value'] ?? $invoice->discount_value,
                 'status' => $validated['status'] ?? $invoice->status,
@@ -230,7 +234,7 @@ class InvoiceController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Invoice updated successfully',
-                'data' => $invoice->load(['items.product.category']),
+                'data' => $invoice->load(['items.product.category', 'customer']),
             ]);
 
         }catch (ValidationException $e){
