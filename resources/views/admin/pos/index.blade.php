@@ -16,9 +16,14 @@
                                 <input type="text" class="form-control" placeholder="Search product by name or SKU..." id="searchInput">
                             </div>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <select class="form-select" id="categoryFilter">
                                 <option value="">All categories</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-select" id="customerFilter">
+                                <option value="">All customers</option>
                             </select>
                         </div>
                     </div>
@@ -46,6 +51,10 @@
                 <div class="card-header d-flex justify-content-between align-items-center bg-primary text-white">
                     <span><i class="bi bi-cart3 me-2"></i>Cart</span>
                     <span class="badge bg-white text-primary" id="cartBadge">0 items</span>
+                </div>
+                <div class="border-bottom px-3 py-2" id="selectedCustomerInfo" style="display: none;">
+                    <div class="small text-muted">Customer</div>
+                    <div class="fw-semibold" id="selectedCustomerText">-</div>
                 </div>
                 <div class="card-body p-0">
                     <!-- Cart Items -->
@@ -135,11 +144,14 @@
             // API URLS
             let productsUrl  = '{{ url("/api/v1/products") }}';
             let categoriesUrl = '{{ url("/api/v1/categories") }}';
+            let customersUrl = '{{ url("/api/v1/customers") }}';
             let invoicesUrl  = '{{ url("/api/v1/invoices") }}';
 
             // Data holders or State
             let allProducts  = [];
             let allCategories = [];
+            let allCustomers = [];
+            let selectedCustomerId = null;
             let cart = [];
 
             // Helper functions
@@ -185,6 +197,22 @@
            }
 
             loadCategories();
+            // ─── Load Customers ────────────────────────────────────────
+           async function loadCustomers(){
+                try{
+                    let response = await axios.get(customersUrl,authHeaders());
+                    allCustomers = response.data['data'] || [];
+                    let select = document.getElementById('customerFilter');
+                    select.innerHTML = '<option value="">Select customer</option>';
+                    allCustomers.forEach(function (customer){
+                        select.innerHTML += '<option value="'+ customer.id + '">'+ escapeHtml(customer.name) +'</option>';
+                    });
+                }catch (err){
+                    showErrorToast(getErrorMessage(err, 'Failed to load customers.'));
+                }
+           }
+
+            loadCustomers();
 
             //Load products and render grid
             async function loadProducts() {
@@ -382,11 +410,22 @@
                 document.getElementById('invoiceDiscountDisplay').textContent = '- ' + formatMoney(invoiceDiscountAmount);
                 invoiceDiscountRow.style.display = invoiceDiscountAmount > 0 ? 'flex' : 'none';
 
+                // Selected customer display
+                let selectedCustomer = allCustomers.find(function (c) { return String(c.id) === String(selectedCustomerId); });
+                let selectedCustomerInfo = document.getElementById('selectedCustomerInfo');
+                let selectedCustomerText = document.getElementById('selectedCustomerText');
+                if (selectedCustomer) {
+                    selectedCustomerText.textContent = selectedCustomer.name;
+                    selectedCustomerInfo.style.display = 'block';
+                } else {
+                    selectedCustomerInfo.style.display = 'none';
+                }
+
                 // Cart badge & buttons
                 document.getElementById('cartBadge').textContent = cart.length + ' item' + (cart.length !== 1 ? 's' : '');
                 document.getElementById('totalsSection').style.display = cart.length > 0 ? 'block' : 'none';
-                document.getElementById('finalizeBtn').disabled = cart.length === 0;
-                document.getElementById('saveDraftBtn').disabled = cart.length === 0;
+                document.getElementById('finalizeBtn').disabled = cart.length === 0 || !selectedCustomer;
+                document.getElementById('saveDraftBtn').disabled = cart.length === 0 || !selectedCustomer;
             }
 
             // ─── Render Cart ────────────────────────────────────────────
@@ -446,6 +485,8 @@
             // ─── Reset Cart ─────────────────────────────────────────────
             function resetCart() {
                 cart = [];
+                selectedCustomerId = null;
+                document.getElementById('customerFilter').value = '';
                 document.getElementById('invoiceNoInput').value = '';
                 document.getElementById('invoiceDateInput').value = todayDate();
                 document.getElementById('invoiceDiscountType').value = '';
@@ -483,6 +524,7 @@
                 return {
                     invoice_no: invoiceNo,
                     invoice_date: invoiceDate,
+                    customer_id: selectedCustomerId,
                     items: items,
                     subtotal: Math.round(subtotal * 100) / 100,
                     discount_type: discountType || null,
@@ -497,6 +539,11 @@
             async function submitInvoice(status) {
                 if (cart.length === 0) {
                     showErrorToast('Cart is empty.');
+                    return;
+                }
+
+                if (!selectedCustomerId) {
+                    showErrorToast('Please select a customer.');
                     return;
                 }
 
@@ -534,6 +581,10 @@
             // ─── Event Listeners ────────────────────────────────────────
             document.getElementById('searchInput').addEventListener('input', renderProducts);
             document.getElementById('categoryFilter').addEventListener('change', renderProducts);
+            document.getElementById('customerFilter').addEventListener('change', function () {
+                selectedCustomerId = this.value || null;
+                updateTotals();
+            });
             document.getElementById('invoiceDiscountType').addEventListener('change', function () { recalcCart(); renderCart(); });
             document.getElementById('invoiceDiscountValue').addEventListener('input', function () { recalcCart(); renderCart(); });
             document.getElementById('clearCartBtn').addEventListener('click', function () {
