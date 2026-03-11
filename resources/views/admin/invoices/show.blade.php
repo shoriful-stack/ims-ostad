@@ -44,6 +44,8 @@
             }
 
             let invoiceDate = invoice.invoice_date ? invoice.invoice_date.substring(0, 10) : '-';
+            let customerName = invoice.customer && invoice.customer.name ? invoice.customer.name : '-';
+            let customerMobile = invoice.customer && invoice.customer.mobile ? invoice.customer.mobile : '-';
             let items = invoice.items || [];
             let itemsRows = '';
 
@@ -105,9 +107,11 @@
                     <div>
                         <h4 class="mb-1">${invoice.invoice_no || ''}</h4>
                         <div class="text-muted">Date: ${invoiceDate}</div>
-                    </div>
-                    <div class="text-end">
+                        </div>
+                        <div class="text-end">
                         ${statusBadge}
+                        <div class="text-muted small">Customer: ${customerName} </div>
+                        <div class="text-muted small">Mobile: ${customerMobile} </div>
                     </div>
                 </div>
 
