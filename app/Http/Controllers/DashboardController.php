@@ -35,4 +35,8 @@ class DashboardController extends Controller
     {
         return view('admin.invoices.index');
     }
+    public function customer()
+    {
+        return view('admin.customers.index');
+    }
 }

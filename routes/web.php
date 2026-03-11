@@ -15,6 +15,7 @@ Route::get('/logout',[AuthController::class,'logout'])->middleware('token.auth')
 
 Route::get('/dashboard',[DashboardController::class,'index'])->middleware('token.auth')->name('dashboard');
 Route::get('/categories',[DashboardController::class,'category'])->middleware('token.auth')->name('categories');
+Route::get('/customers',[DashboardController::class,'customer'])->middleware('token.auth')->name('customers');
 Route::get('/products',[DashboardController::class,'product'])->middleware('token.auth')->name('products');
 Route::get('/stocks',[DashboardController::class,'stock'])->middleware('token.auth')->name('stocks');
 Route::get('/pos',[DashboardController::class,'pos'])->middleware('token.auth')->name('pos');
