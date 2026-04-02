@@ -86,7 +86,7 @@
                 itemsRows = '<tr><td colspan="6" class="text-center text-muted py-3">No items.</td></tr>';
             }
 
-            // let subtotal = parseFloat(invoice.subtotal || 0).toFixed(2);
+            let subtotal = parseFloat(invoice.subtotal || 0).toFixed(2);
             let discountAmount = parseFloat(invoice.discount_amount || 0);
             let grandTotal = parseFloat(invoice.grand_total || 0).toFixed(2);
 
