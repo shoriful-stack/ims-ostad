@@ -90,7 +90,7 @@
             let discountAmount = parseFloat(invoice.discount_amount || 0);
             let grandTotal = parseFloat(invoice.grand_total || 0).toFixed(2);
 
-            let invoiceDiscountHtml = '—';
+            let invoiceDiscountHtml = '—'; 
             if (discountAmount > 0) {
                 let label = '';
                 if (invoice.discount_type === 'percent') {
